@@ -62,11 +62,11 @@ def compare_pose(user_landmarks, pose_landmarks):
         print(f"Pose Landmark: ({pose_lm.x:.2f}, {pose_lm.y:.2f}, {pose_lm.z:.2f})")
         print(f"Distance: {distance:.2f}")
     
+
     # Calculate accuracy as the mean normalized distance between corresponding landmarks
-    mean_distance = np.mean(distances)
-    
-    # Calculate accuracy with normalization to ensure it falls within the range [0, 1]
-    accuracy = abs(1 - abs((max_possible_distance/max(1,mean_distance))))
+    normalized_distances = [distance / max_possible_distance for distance in distances]
+    accuracy = 1 - np.mean(normalized_distances)
+
     
     return accuracy*100  # Ensure accuracy is within the range [0, 1]
 
