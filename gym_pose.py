@@ -67,7 +67,6 @@ def compare_pose(user_landmarks, pose_landmarks):
     normalized_distances = [distance / max_possible_distance for distance in distances]
     accuracy = 1 - np.mean(normalized_distances)
 
-    
     return accuracy*100  # Ensure accuracy is within the range [0, 1]
 
 
@@ -96,45 +95,35 @@ demo_image_path= "data\demo.png"
 pose_name = get_pose()
 pose_image_path = None
 
-if pose_name == "squats":
-    pose_image_path = squats_image_path
-elif pose_name == "pushups":
-    pose_image_path = pushups_image_path
-elif pose_name == "lunges":
-    pose_image_path = lunges_image_path
-elif pose_name == "shoulder_press":
-    pose_image_path = shoulder_press_image_path
-elif pose_name == "bicep_curls":
-    pose_image_path = bicep_curls_image_path
-elif pose_name == "lat_raises":
-    pose_image_path = lat_raises_image_path
-elif pose_name == "lat_pulldowns":
-    pose_image_path = lat_pulldowns_image_path
-elif pose_name == "leg_presses":
-    pose_image_path = leg_presses_image_path
-elif pose_name == "jumping_jacks":
-    pose_image_path = jumping_jacks_image_path
-elif pose_name == "leg_raises":
-    pose_image_path = leg_raises_image_path
-elif pose_name == "mountain_climbers":
-    pose_image_path = mountain_climbers_image_path
-elif pose_name == "burpees":
-    pose_image_path = burpees_image_path
-elif pose_name == "high_knees":
-    pose_image_path = high_knees_image_path
-elif pose_name == "situps":
-    pose_image_path = situps_image_path
-elif pose_name == "planks":
-    pose_image_path = planks_image_path
-elif pose_name == "bench_press":
-    pose_image_path = bench_press_image_path
-elif pose_name == "demo":
-    pose_image_path = demo_image_path
+# Map pose names to image paths
+pose_image_paths = {
+    "squats": squats_image_path,
+    "pushups": pushups_image_path,
+    "lunges": lunges_image_path,
+    "shoulder_press": shoulder_press_image_path,
+    "bicep_curls": bicep_curls_image_path,
+    "lat_raises": lat_raises_image_path,
+    "lat_pulldowns": lat_pulldowns_image_path,
+    "leg_presses": leg_presses_image_path,
+    "jumping_jacks": jumping_jacks_image_path,
+    "leg_raises": leg_raises_image_path,
+    "mountain_climbers": mountain_climbers_image_path,
+    "burpees": burpees_image_path,
+    "high_knees": high_knees_image_path,
+    "situps": situps_image_path,
+    "planks": planks_image_path,
+    "bench_press": bench_press_image_path,
+    "demo": demo_image_path
+}
 
-if pose_image_path:
-    # Load reference pose image
-    pose_landmarks = get_landmarks(pose_image_path)
+if pose_name in pose_image_paths:
+    pose_image_path = pose_image_paths[pose_name]
+else:
+    print("Error: Pose not recognized.")
+    exit()
 
+# Load reference pose image
+pose_landmarks = get_landmarks(pose_image_path)
 
 cap = cv2.VideoCapture(0)
 #set up mediapipe instance
@@ -199,15 +188,34 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
             print(f"Error: {e}")
 
         #render detections
-        mp_drawing.draw_landmarks(image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
-                                  #change the color of the joints and connections
-                                    mp_drawing.DrawingSpec(color=(245,117,66), thickness=2, circle_radius=2), #for the joints
-                                    mp_drawing.DrawingSpec(color=(245,66,230), thickness=2, circle_radius=2) #for the connections
+        #landmarks for user
+       
+    
+            if pose_image_path and pose_landmarks is not None:
+                pose_image = cv2.imread(pose_image_path)
+                pose_image_resized = cv2.resize(pose_image, (frame.shape[1], frame.shape[0]))
 
-                                  
-                                  )
+                if pose_landmarks and results.pose_landmarks:
+                    # Draw landmarks on the reference pose image
+                    mp_drawing.draw_landmarks(
+                        pose_image_resized, pose_landmarks, mp_pose.POSE_CONNECTIONS,
+                        landmark_drawing_spec=mp_drawing.DrawingSpec(color=(0,255,0), thickness=2, circle_radius=2),
+                        connection_drawing_spec=mp_drawing.DrawingSpec(color=(0,255,0), thickness=2))
 
-        cv2.imshow('MediaPipe Feed',image) 
+                    mp_drawing.draw_landmarks(
+                            image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
+                            landmark_drawing_spec=mp_drawing.DrawingSpec(color=(245,117,66), thickness=2, circle_radius=2),
+                            connection_drawing_spec=mp_drawing.DrawingSpec(color=(245,66,230), thickness=2, circle_radius=2))
+
+                        # Combine the frame and the reference pose image
+                    combined_image = cv2.hconcat([image, pose_image_resized])
+                    cv2.imshow('MediaPipe Feed', combined_image)
+                else:
+                    print("Error: No landmarks detected in the webcam feed image.")
+            else:
+                print("Error: No landmarks detected in the reference pose image.")
+        else:
+            cv2.imshow('MediaPipe Feed',image) 
 
         if cv2.waitKey(10) & 0xFF == ord('q'):
             break
