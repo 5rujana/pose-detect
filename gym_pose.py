@@ -187,36 +187,11 @@ with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as 
         except Exception as e:
             print(f"Error: {e}")
 
-        #render detections
-        #landmarks for user
-       
-    
-            if pose_image_path and pose_landmarks is not None:
-                pose_image = cv2.imread(pose_image_path)
-                pose_image_resized = cv2.resize(pose_image, (frame.shape[1], frame.shape[0]))
-
-                if pose_landmarks and results.pose_landmarks:
-                    # Draw landmarks on the reference pose image
-                    mp_drawing.draw_landmarks(
-                        pose_image_resized, pose_landmarks, mp_pose.POSE_CONNECTIONS,
-                        landmark_drawing_spec=mp_drawing.DrawingSpec(color=(0,255,0), thickness=2, circle_radius=2),
-                        connection_drawing_spec=mp_drawing.DrawingSpec(color=(0,255,0), thickness=2))
-
-                    mp_drawing.draw_landmarks(
-                            image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
-                            landmark_drawing_spec=mp_drawing.DrawingSpec(color=(245,117,66), thickness=2, circle_radius=2),
-                            connection_drawing_spec=mp_drawing.DrawingSpec(color=(245,66,230), thickness=2, circle_radius=2))
-
-                        # Combine the frame and the reference pose image
-                    combined_image = cv2.hconcat([image, pose_image_resized])
-                    cv2.imshow('MediaPipe Feed', combined_image)
-                else:
-                    print("Error: No landmarks detected in the webcam feed image.")
-            else:
-                print("Error: No landmarks detected in the reference pose image.")
-        else:
-            cv2.imshow('MediaPipe Feed',image) 
-
+        mp_drawing.draw_landmarks(
+            image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
+            landmark_drawing_spec=mp_drawing.DrawingSpec(color=(245, 117, 66), thickness=2, circle_radius=2),
+            connection_drawing_spec=mp_drawing.DrawingSpec(color=(245, 66, 230), thickness=2, circle_radius=2))
+                    
         if cv2.waitKey(10) & 0xFF == ord('q'):
             break
 cap.release()
